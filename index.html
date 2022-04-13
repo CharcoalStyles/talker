@@ -6,50 +6,54 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Talker</title>
-  <link href="https://api.fonts.coollabs.io/css2?family=Fredoka+One&display=swap" rel="stylesheet">
   <link href="index.css" rel="stylesheet">
   <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
 <body>
-  <div class="container" tabindex="0" x-data="{keyPress: '', css: { 'background-color': '#33dd99'}}"
-    x-on:keyup="handleKeyPress" :style="css">
+  <div class="container" tabindex="0" x-data="data()" x-on:keyup="handleKeyPress" :style="css">
     <p class="letter" x-text="keyPress"></p>
   </div>
   <script>
     const speech = new SpeechSynthesisUtterance();
 
-    const colors = [
-      "#dd3333",
-      "#dd6633",
-      "#dd9933",
-      "#ddcc33",
-      "#ddff33",
-      "#33dd33",
-      "#33dd66",
-      "#33dd99",
-      "#33ddcc",
-      "#33ddff",
-      "#3333dd",
-      "#6633dd",
-      "#9933dd",
-      "#cc33dd",
-      "#ff33dd"
-    ];
-
     const minDelay = 1000;
 
     let lastPress = Date.now();
+
+    function calculateBackground(hue) {
+      const hue2 = (hue + 18) % 360;
+      const hue3 = (hue + 36) % 360;
+      return `radial-gradient(circle, hsl(${hue}, 80%, 60%) 0%, hsl(${hue2}, 80%, 60%) 30%, hsl(${hue3}, 80%, 60%) 100%)`;
+    }
+
+    function data() {
+
+      return {
+        init: function () {
+          const backgroundTimer = () => {
+            this.hueDegree = (this.hueDegree + 1) % 360;
+            const background = calculateBackground(this.hueDegree);
+            this.css = `background: ${background}`;
+            setTimeout(backgroundTimer, 50);
+          };
+          setTimeout(backgroundTimer, 50);
+          this.keyPress = "";
+          this.hueDegree = 0;
+          this.css = {
+            "background": calculateBackground(0)
+          };
+        },
+      }
+    }
 
     function handleKeyPress(e) {
       const value = e.key;
       const now = Date.now();
 
-      if ((/[a-zA-Z0-9]/).test(value) && now - lastPress > minDelay) {
+      if (value.length === 1 & (/[a-zA-Z0-9]/).test(value) && now - lastPress > minDelay) {
         lastPress = now;
         this.keyPress = value.toUpperCase();
-        const filteredColors = colors.filter(color => color !== this.css["background-color"]);
-        this.css['background-color'] = filteredColors[Math.floor(Math.random() * filteredColors.length)];
 
         speechSynthesis.cancel();
 
